@@ -1,0 +1,21 @@
+# 로컬 훅 — 예산: pre-commit <5초, pre-push <60초.
+# 무거운 검사(통합테스트·semgrep·라쳇)는 전부 CI에서. --no-verify 쓸 일 없는 속도가 목표.
+pre-commit:
+  parallel: true
+  jobs:
+    - name: eslint (staged만)
+      glob: '*.{ts,tsx,mjs}'
+      stage_fixed: true
+      run: bunx eslint --fix --no-warn-ignored {staged_files}
+    - name: gitleaks (staged 시크릿 차단)
+      run: >
+        sh -c 'command -v gitleaks >/dev/null 2>&1
+        && gitleaks protect --staged --redact
+        || echo "[skip] gitleaks 미설치 — brew install gitleaks (CI에서는 무조건 돈다)"'
+
+pre-push:
+  jobs:
+    - name: typecheck (turbo 캐시)
+      run: bun run typecheck
+    - name: unit tests
+      run: sh -c 'cd apps/accounts && bun test'

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "workspaces": {
+    "apps/accounts": {
+      "entry": ["src/index.ts", "src/**/__tests__/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/*": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "ops-tools/ratchet": {
+      "entry": ["cli.ts"],
+      "project": ["**/*.ts"]
+    }
+  },
+  "ignoreBinaries": ["gitleaks", "docker"],
+  "ignoreDependencies": ["@types/bun"]
+}

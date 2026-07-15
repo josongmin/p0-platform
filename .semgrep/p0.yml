@@ -1,0 +1,63 @@
+rules:
+  # ── 헥사고날 강제: 벤더 SDK는 자기 feature의 adapters/ 밖으로 못 나간다 ──
+  # (타입만 쓰는 import type은 허용 — 런타임 결합만 차단)
+  # (import type … 은 허용 — 부정 전방탐색. 멀티라인 import는 ;가 없는 구간까지 매칭)
+  - id: p0-stripe-outside-billing-adapters
+    languages: [ts]
+    severity: ERROR
+    message: >
+      Stripe SDK 런타임 import는 features/billing/adapters/ 안에서만.
+      바깥에서는 billing의 ports/index.ts를 거쳐라 (ARCHITECTURE.md 슬라이싱 규칙).
+    pattern-regex: import\s+(?!type\b)[^;]{0,300}?from\s+['"]stripe['"]|require\(['"]stripe['"]\)
+    paths:
+      exclude:
+        - '**/features/billing/adapters/**'
+
+  - id: p0-better-auth-outside-auth-adapters
+    languages: [ts]
+    severity: ERROR
+    message: >
+      better-auth 런타임 import는 features/auth/adapters/ 안에서만.
+      바깥에서는 auth의 공개 API(index.ts)를 거쳐라.
+    pattern-regex: import\s+(?!type\b)[^;]{0,300}?from\s+['"](?:better-auth(?:/[^'"]+)?|@better-auth/[^'"]+)['"]
+    paths:
+      exclude:
+        - '**/features/auth/adapters/**'
+
+  # ── env 중앙화: process.env 직접 접근은 lib/env.ts만 ──
+  - id: p0-env-outside-lib-env
+    languages: [ts]
+    severity: ERROR
+    message: process.env 직접 접근 금지 — lib/env.ts(zod 검증)를 거쳐라.
+    pattern: process.env
+    paths:
+      include:
+        - 'apps/*/src/**'
+      exclude:
+        - '**/lib/env.ts'
+
+  # ── SQL 인젝션: drizzle sql 템플릿에 문자열 결합 금지 ──
+  - id: p0-raw-sql-string-concat
+    languages: [ts]
+    severity: ERROR
+    message: sql 쿼리에 문자열 결합/보간 금지 — drizzle 파라미터 바인딩을 써라.
+    pattern-either:
+      - pattern: db.execute("..." + $X)
+      - pattern: db.execute(`...${$X}...`)
+      - pattern: sql.raw("..." + $X)
+      - pattern: sql.raw(`...${$X}...`)
+
+  # ── 시크릿 하드코딩 냄새 (gitleaks 보완) ──
+  - id: p0-hardcoded-secret-assignment
+    languages: [ts]
+    severity: WARNING
+    message: 시크릿으로 보이는 하드코딩 — env로 옮겨라.
+    patterns:
+      - pattern-either:
+          - pattern: |
+              const $KEY = "sk_live_...";
+          - pattern: |
+              const $KEY = "whsec_...";
+    paths:
+      exclude:
+        - '**/__tests__/**'

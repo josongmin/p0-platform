@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "schedule": ["before 9am on monday"],
+  "lockFileMaintenance": { "enabled": true, "schedule": ["before 9am on monday"] },
+  "packageRules": [
+    {
+      "description": "devDeps patch/minor는 자동머지 (CI 그린 조건)",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true
+    },
+    {
+      "description": "인증·결제는 자동머지 금지 — 수동 리뷰",
+      "matchPackageNames": ["better-auth", "stripe"],
+      "matchPackagePrefixes": ["@better-auth/"],
+      "automerge": false,
+      "labels": ["security-review"]
+    }
+  ]
+}

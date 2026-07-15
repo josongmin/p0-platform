@@ -1,0 +1,56 @@
+# 보안 스캔 — PR + 주간 전체 스캔. finding = 무조건 fail (라쳇 0 고정).
+name: security
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 0 * * 1' # 매주 월요일 — 전체 히스토리·전체 의존성 재스캔
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: semgrep (레지스트리 룰 + p0 커스텀)
+        run: >
+          semgrep scan --error --metrics=off
+          --config p/default
+          --config p/typescript
+          --config p/owasp-top-ten
+          --config p/jwt
+          --config .semgrep/p0.yml
+          --exclude packages/db/src/schema/auth.ts
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # cron 전체 히스토리 스캔용
+      - name: gitleaks
+        run: >
+          docker run --rm -v ${{ github.workspace }}:/repo
+          ghcr.io/gitleaks/gitleaks:latest
+          detect --source /repo --config /repo/.gitleaks.toml
+          --redact --exit-code 1
+
+  osv-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: osv-scanner (의존성 CVE)
+        run: |
+          curl -sSL -o osv-scanner \
+            https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64
+          chmod +x osv-scanner
+          ./osv-scanner scan --recursive .

@@ -1,0 +1,15 @@
+# gitleaks — 기본 룰셋 확장.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "예제·테스트 픽스처는 시크릿 아님"
+paths = [
+  '''\.env\.example$''',
+  '''__tests__/''',
+]
+# dev 기본값 (실시크릿 아님)
+regexes = [
+  '''dev-secret-change-me''',
+  '''postgres://p0:p0@localhost''',
+]

@@ -1,0 +1,25 @@
+{
+  "name": "@p0/accounts",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "auth:generate": "bunx @better-auth/cli@latest generate --config src/features/auth/adapters/better-auth.ts --output ../../packages/db/src/schema/auth.ts -y"
+  },
+  "dependencies": {
+    "@better-auth/api-key": "^1.6.0",
+    "@p0/contracts": "workspace:*",
+    "@p0/db": "workspace:*",
+    "@p0/shared": "workspace:*",
+    "better-auth": "^1.6.0",
+    "drizzle-orm": "^0.44.0",
+    "hono": "^4.6.0",
+    "stripe": "^18.0.0",
+    "zod": "^3.25.0",
+    "zod-to-json-schema": "^3.25.2"
+  }
+}

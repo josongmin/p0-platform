@@ -1,0 +1,13 @@
+// 공개 API — 밖에서는 이 파일로만 접근.
+export { auth } from './adapters/better-auth';
+export { authRoutes } from './routes';
+export { setClaimsBuilder } from './claims';
+export {
+  authorize,
+  getMemberRole,
+  getSession,
+  verifyServiceKey,
+  type AuthorizeResult,
+} from './service';
+export { can, isOrgRole, ORG_ROLES } from './domain/roles';
+export type { ActionOf, OrgRole, Resource } from './domain/roles';
