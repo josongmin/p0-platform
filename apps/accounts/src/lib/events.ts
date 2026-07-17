@@ -9,6 +9,12 @@ export type AccountsEvents = {
     status: SubscriptionStatus;
   };
   'usage.recorded': UsageEvent;
+  // org 멤버십/역할 변경 — entitlements가 구독해 epoch를 bump한다.
+  'org.membership.changed': { orgId: string };
+  // 엔타이틀먼트 무효화 트리거(구독취소·사용자삭제 등 webhook 밖 경로) → epoch bump.
+  'entitlements.invalidate': { orgId: string };
+  // 결제 실패(dunning) — 감사기록·알림 트리거.
+  'billing.payment_failed': { orgId: string; amountDue: number; attemptCount: number };
 };
 
 type Handler<T> = (payload: T) => void | Promise<void>;

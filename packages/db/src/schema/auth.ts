@@ -152,6 +152,9 @@ export const member = pgTable(
   (table) => [
     index("member_organizationId_idx").on(table.organizationId),
     index("member_userId_idx").on(table.userId),
+    // ⚠️ 수기 추가 — auth:generate가 이 파일을 덮어쓰면 재적용 필수 (README 참고).
+    // 동시 초대수락 등으로 (org,user) 멤버십이 중복 생성되는 레이스를 DB에서 차단.
+    uniqueIndex("member_org_user_uidx").on(table.organizationId, table.userId),
   ],
 );
 

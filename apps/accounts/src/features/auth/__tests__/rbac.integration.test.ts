@@ -45,6 +45,18 @@ describe.skipIf(!up)('RBAC guards (integration)', () => {
       headers: new Headers({ cookie: ownerCookie }),
     });
     orgId = org!.id;
+    // 이 스위트는 여러 역할 멤버를 한 org에 추가한다 → 시트강제(free=3석)에 걸리므로
+    // 좌석 넉넉한 business(100석)로 시드. status=none 유지(checkout 테스트 영향 없음).
+    const { billingStore } = await import('../../billing/adapters/store');
+    await billingStore.upsert({
+      orgId,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      plan: 'business',
+      status: 'none',
+      currentPeriodEnd: null,
+      watermark: null,
+    });
   });
 
   test('비로그인 → 401', async () => {
@@ -60,9 +72,15 @@ describe.skipIf(!up)('RBAC guards (integration)', () => {
     expect(res.status).toBe(403);
   });
 
-  test('owner → billing 조회 200 (free)', async () => {
-    const res = await app.request(`/v1/billing/${orgId}`, {
-      headers: { cookie: ownerCookie },
+  test('owner → billing 조회 200 (신규 org는 free 기본)', async () => {
+    // 공유 org는 business로 시드했으므로 free 기본값 검증은 새 org로.
+    const freshOwner = await signUp(`${uniq('freshowner')}@p0.test`);
+    const freshOrg = await auth.api.createOrganization({
+      body: { name: 'fresh org', slug: uniq('fresh') },
+      headers: new Headers({ cookie: freshOwner.cookie }),
+    });
+    const res = await app.request(`/v1/billing/${freshOrg!.id}`, {
+      headers: { cookie: freshOwner.cookie },
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { plan: string };
@@ -127,8 +145,56 @@ describe.skipIf(!up)('RBAC guards (integration)', () => {
     });
     expect(res.status).toBe(401);
   });
+
+  test('★크로스-org(IDOR): org A 소유자가 org B 리소스 접근 → 403', async () => {
+    const owner2 = await signUp(`${uniq('owner2')}@p0.test`);
+    const org2 = await auth.api.createOrganization({
+      body: { name: 'other org', slug: uniq('org2') },
+      headers: new Headers({ cookie: owner2.cookie }),
+    });
+    // org1의 owner가 org2의 billing을 조회 시도 → org2 멤버가 아니므로 403
+    const res = await app.request(`/v1/billing/${org2!.id}`, {
+      headers: { cookie: ownerCookie },
+    });
+    expect(res.status).toBe(403);
+  });
+
+  test('★DB에 알 수 없는 role이 있으면 락아웃(403) — 권한 상승 아님', async () => {
+    const u = await signUp(`${uniq('rogue')}@p0.test`);
+    const { schema } = await import('@p0/db');
+    const { db } = await import('../../../lib/db');
+    // 매트릭스에 없는 role을 직접 심음 (better-auth 우회)
+    await db.insert(schema.member).values({
+      id: `mem_${crypto.randomUUID().slice(0, 12)}`,
+      organizationId: orgId,
+      userId: u.userId,
+      role: 'superhacker',
+      createdAt: new Date(),
+    });
+    const res = await app.request(`/v1/billing/${orgId}`, {
+      headers: { cookie: u.cookie },
+    });
+    expect(res.status).toBe(403);
+  });
+
+  test('checkout: billing 권한 통과 → 게이트(401/403) 아님 (price 설정 여부와 무관)', async () => {
+    const b = await signUp(`${uniq('bill2')}@p0.test`);
+    await auth.api.addMember({
+      body: { userId: b.userId, organizationId: orgId, role: 'billing' },
+    });
+    const res = await app.request(`/v1/billing/${orgId}/checkout`, {
+      method: 'POST',
+      headers: { cookie: b.cookie, 'content-type': 'application/json' },
+      body: JSON.stringify({ plan: 'team', cycle: 'monthly' }),
+    });
+    // price 있으면 200(url), 없으면 400(no-price) — 둘 다 권한 게이트는 통과한 것
+    expect([401, 403]).not.toContain(res.status);
+  });
 });
 
-test.skipIf(up)('⚠️ DB 미기동 — RBAC 통합테스트 skip됨', () => {
-  expect(up).toBe(false);
+// C2(test): CI에서는 DB가 반드시 떠 있어야 한다 — skip으로 보안 스위트가 조용히 증발 금지
+test('보안 통합 스위트 실행 보장 (CI에선 DB 필수)', async () => {
+  const { env } = await import('../../../lib/env');
+  if (env.CI) expect(up).toBe(true);
+  else expect(typeof up).toBe('boolean');
 });

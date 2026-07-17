@@ -29,7 +29,7 @@ bun run auth:generate             # better-auth 플러그인 변경 시 스키�
 - **eslint boundaries는 resolver 없으면 조용히 무력화** — `import/resolver` 설정 지우지 마라
 - **통합테스트는 DB 필요**: `docker compose up -d postgres` — DB 없으면 자동 skip이라 "전부 통과"처럼 보일 수 있음, CI가 진짜 게이트
 - **BETTER_AUTH_SECRET 바꾸면 jwks 테이블 클린업 필수** — 옛 시크릿으로 암호화된 키가 남아 "Failed to decrypt private key"로 전 테스트가 500 난다: `docker compose exec postgres psql -U p0 -d p0 -c 'DELETE FROM jwks;'`
-- 라쳇 후퇴(coverage↓, any↑, knip↑)는 CI fail — 우회하지 말고 원인 고쳐라
+- 라쳇 후퇴(coverage↓, any↑, knip↑, 억제주석/`.only`/`.skip`↑)는 CI fail — 우회하지 말고 원인 고쳐라. **baseline.json 직접 완화도 CI `guard-baseline`이 차단** (정당한 완화 = PR 제목 `[ratchet-loosen]` + 사유). 상세: ops-tools/ratchet/README.md
 
 ## 작업 방식
 

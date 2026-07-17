@@ -22,13 +22,25 @@ export type SubscriptionChange = {
   currentPeriodEnd: number | null; // unix 초
 };
 
+// 인보이스 결제 실패(dunning) — 어댑터가 Stripe.Invoice에서 파싱. `invoiceKind`로
+// SubscriptionChange와 판별한다.
+export type InvoiceChange = {
+  invoiceKind: 'payment_failed';
+  eventId: string;
+  stripeCustomerId: string;
+  customerEmail: string | null;
+  amountDue: number; // 최소단위(센트)
+  currency: string;
+  attemptCount: number;
+};
+
 export type ExistingBilling = {
   orgId: string;
   plan: string;
   watermark: number | null;
 } | null;
 
-export type BillingDecision =
+type BillingDecision =
   | { apply: false; reason: string }
   | {
       apply: true;

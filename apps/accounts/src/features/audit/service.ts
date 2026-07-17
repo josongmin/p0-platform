@@ -43,4 +43,17 @@ export function registerAuditSubscriptions(): void {
       payload: p,
     }),
   );
+  bus.on('billing.payment_failed', (p) =>
+    recordAudit({
+      orgId: p.orgId,
+      actor: 'system:stripe',
+      action: 'billing.payment_failed',
+      payload: p,
+    }),
+  );
+}
+
+/** 리텐션 프루닝 — cutoff 이전 감사 로그 삭제. */
+export function pruneAuditLog(cutoff: Date): Promise<number> {
+  return auditStore.pruneBefore(cutoff);
 }

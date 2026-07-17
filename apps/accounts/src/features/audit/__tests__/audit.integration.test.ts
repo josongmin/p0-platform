@@ -69,4 +69,13 @@ describe.skipIf(!up)('audit log (integration)', () => {
     });
     expect(res.status).toBe(403);
   });
+
+  test('limit 방어: 비숫자/음수/과대값에도 500이 아니라 200', async () => {
+    for (const bad of ['abc', '-5', '999999', '0']) {
+      const res = await app.request(`/v1/audit/${orgId}?limit=${bad}`, {
+        headers: { cookie: ownerCookie },
+      });
+      expect(res.status).toBe(200);
+    }
+  });
 });

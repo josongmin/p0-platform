@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "workspaces": {
     "apps/accounts": {
-      "entry": ["src/index.ts", "src/**/__tests__/**/*.test.ts"],
+      "entry": ["src/index.ts", "src/scripts/*.ts", "src/**/__tests__/**/*.test.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/*": {

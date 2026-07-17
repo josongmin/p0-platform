@@ -1,7 +1,11 @@
 // 유스케이스 — domain(can) + ports(memberRoleReader) + vendor(auth) 조립.
 import { auth } from './adapters/better-auth';
 import { memberRoleReader } from './adapters/member-repo';
+import { deleteOrgById, memberOrgIds, soleOwnedOrgIds } from './adapters/org-repo';
 import { can, isOrgRole, type OrgRole, type Resource } from './domain/roles';
+import { extractKeyOrgId } from './domain/service-key';
+
+export { deleteOrgById, memberOrgIds, soleOwnedOrgIds };
 
 export async function getSession(headers: Headers) {
   return auth.api.getSession({ headers });
@@ -34,19 +38,19 @@ export async function authorize(input: {
   return { allowed: true, role };
 }
 
-export type ServiceKeyResult =
+type ServiceKeyResult =
   | { valid: true; orgId: string | null }
   | { valid: false; orgId: null };
 
 /**
  * 서비스 간 호출(x-api-key) 검증 — better-auth apiKey 플러그인.
- * key.referenceId = 키 발급 시 묶은 org id. 호출자는 이 org로만 쓸 수 있어야 하므로
- * boolean이 아니라 referenceId까지 반환한다 (C1: 크로스 테넌트 쓰기 차단).
+ * 서비스 키는 발급 시 metadata.orgId 로 org에 묶는다 (enableMetadata). 이 orgId만
+ * 사용량을 기록할 수 있다 (C1: 크로스 테넌트 쓰기 차단).
+ * 주의: referenceId는 기본 references:"user"라 userId → org 스코핑에 못 씀. metadata를 쓴다.
  */
 export async function verifyServiceKey(key: string): Promise<ServiceKeyResult> {
   const result = await auth.api.verifyApiKey({ body: { key } });
   if (result.valid !== true) return { valid: false, orgId: null };
-  const referenceId =
-    (result.key as { referenceId?: string | null } | null)?.referenceId ?? null;
-  return { valid: true, orgId: referenceId };
+  const metadata = (result.key as { metadata?: unknown } | null)?.metadata;
+  return { valid: true, orgId: extractKeyOrgId(metadata) };
 }
