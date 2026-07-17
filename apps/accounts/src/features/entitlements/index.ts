@@ -1,3 +1,7 @@
 // 공개 API — 밖에서는 이 파일로만 접근.
-export { entitlementsRoutes } from './routes';
-export { buildClaims } from './service';
+export { entitlementsRoutes, entitlementsServiceRoutes } from './routes';
+export {
+  buildClaims,
+  registerEpochSubscriptions,
+  seatLimitForOrg,
+} from './service';

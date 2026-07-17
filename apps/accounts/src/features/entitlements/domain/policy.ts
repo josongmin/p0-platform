@@ -62,3 +62,8 @@ export function computeEntitlements(plan: PlanId, role: OrgRole): Entitlements {
       : [...base.features];
   return { plan: resolvedPlan, role, ...base, features };
 }
+
+/** plan의 시트 한도 — 오염값은 free로 폴백(seat 강제에서 안전한 하한). */
+export function maxSeatsForPlan(plan: string): number {
+  return (PLAN_TABLE[plan as PlanId] ?? PLAN_TABLE.free).maxSeats;
+}

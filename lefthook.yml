@@ -7,6 +7,10 @@ pre-commit:
       glob: '*.{ts,tsx,mjs}'
       stage_fixed: true
       run: bunx eslint --fix --no-warn-ignored {staged_files}
+    - name: arch-check (아키텍처 불변량 — 테이블소유권·벤더SDK·env·배선)
+      run: bun ops-tools/arch-check/cli.ts
+    - name: ratchet quick (any·억제 증가 즉사)
+      run: bun ops-tools/ratchet/cli.ts quick
     - name: gitleaks (staged 시크릿 차단)
       run: >
         sh -c 'command -v gitleaks >/dev/null 2>&1

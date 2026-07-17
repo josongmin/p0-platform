@@ -1,9 +1,9 @@
 // driven adapter — Stripe SDK는 이 파일 밖으로 안 샌다 (service는 ports·domain만).
 import Stripe from 'stripe';
-import { env } from '../../../lib/env';
+import { env, appBaseUrl } from '../../../lib/env';
 import { buildPriceTable } from '../domain/price-table';
-import type { SubscriptionChange } from '../domain/webhook';
-import type { CheckoutGateway, PortalGateway } from '../ports';
+import type { InvoiceChange, SubscriptionChange } from '../domain/webhook';
+import type { CheckoutGateway, PortalGateway, SubscriptionGateway } from '../ports';
 
 let client: Stripe | null = null;
 
@@ -32,8 +32,9 @@ export const checkoutGateway: CheckoutGateway = {
       line_items: [{ price: priceId, quantity: 1 }],
       customer: customerId ?? undefined,
       client_reference_id: orgId,
-      success_url: `${env.BETTER_AUTH_URL}/billing/success`,
-      cancel_url: `${env.BETTER_AUTH_URL}/billing/cancel`,
+      // 고객 대면 FE로 리다이렉트 (백엔드 origin이면 404).
+      success_url: `${appBaseUrl()}/billing/success`,
+      cancel_url: `${appBaseUrl()}/billing/cancel`,
       subscription_data: { metadata: { orgId } },
     });
     if (!session.url) throw new Error('stripe returned no checkout url');
@@ -45,11 +46,35 @@ export const portalGateway: PortalGateway = {
   createSession: async ({ customerId }) => {
     const session = await stripe().billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${env.BETTER_AUTH_URL}/billing`,
+      return_url: `${appBaseUrl()}/billing`,
     });
     return { url: session.url };
   },
 };
+
+export const subscriptionGateway: SubscriptionGateway = {
+  cancel: async (subscriptionId) => {
+    await stripe().subscriptions.cancel(subscriptionId);
+  },
+};
+
+/** Stripe Billing Meter 이벤트 전송 (usage 릴레이가 billing 공개 API로 호출). */
+export async function recordMeterEvent(input: {
+  eventName: string;
+  customerId: string;
+  value: number;
+  identifier: string;
+  timestampSec: number; // 사용 시각(unix초) — 청구기간 정확 배정. 미지정 시 Stripe는 수신시각 사용
+}): Promise<void> {
+  await stripe().billing.meterEvents.create({
+    event_name: input.eventName,
+    // ⚠️ identifier 멱등은 Stripe에서 "최소 24시간 롤링 윈도우"만 보장 — 영구 아님.
+    // 그래서 릴레이는 전송 즉시 relayedAt 마킹(호출측 F3)하고, 35일 초과분은 아예 안 보낸다.
+    identifier: input.identifier,
+    timestamp: input.timestampSec,
+    payload: { stripe_customer_id: input.customerId, value: String(input.value) },
+  });
+}
 
 // 구독 이벤트 3종만 관심 — 타입 좁히기용 상수
 const SUBSCRIPTION_EVENTS = [
@@ -66,13 +91,29 @@ const SUBSCRIPTION_EVENTS = [
 export async function parseWebhookEvent(
   rawBody: string,
   signature: string,
-): Promise<SubscriptionChange | null> {
+): Promise<SubscriptionChange | InvoiceChange | null> {
   if (!env.STRIPE_WEBHOOK_SECRET) throw new Error('STRIPE_WEBHOOK_SECRET is not set');
   const event = await stripe().webhooks.constructEventAsync(
     rawBody,
     signature,
     env.STRIPE_WEBHOOK_SECRET,
   );
+
+  // dunning — 결제 실패
+  if (event.type === 'invoice.payment_failed') {
+    const inv = event.data.object as Stripe.Invoice;
+    if (!inv.customer) return null;
+    return {
+      invoiceKind: 'payment_failed',
+      eventId: event.id,
+      stripeCustomerId: typeof inv.customer === 'string' ? inv.customer : inv.customer.id,
+      customerEmail: inv.customer_email ?? null,
+      amountDue: inv.amount_due,
+      currency: inv.currency,
+      attemptCount: inv.attempt_count ?? 1,
+    };
+  }
+
   const eventType = SUBSCRIPTION_EVENTS.find((t) => t === event.type);
   if (!eventType) return null;
 

@@ -49,7 +49,7 @@ access-control 객체는 `auth/adapters/access-control.ts`가 매트릭스에서
 1. **크로스 feature 접근은 그 feature의 `index.ts`로만.** 딥 임포트 = lint 에러.
 2. **`domain/`은 순수.** 같은 feature의 domain만 import 가능. npm 패키지 금지.
 3. **테이블 소유권**: `packages/db/schema/<feature>.ts` — 쓰기는 소유 feature만,
-   타 feature는 공개 API로 읽는다. (컨벤션 — 리뷰로 지킴)
+   타 feature는 공개 API로 읽는다. (arch-check R1이 기계 강제 — pre-commit+CI)
 4. feature 간 비동기 통신은 `lib/events.ts` 버스로. 이벤트 payload는 contracts 타입.
    분가 시 이 계약이 그대로 큐 토픽이 된다.
 

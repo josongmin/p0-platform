@@ -1,8 +1,14 @@
 import { bigint, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { organization } from './auth';
 
 // 소유: features/billing — 다른 feature는 billing의 공개 API로만 읽는다.
+// org 삭제 시 cascade — 고아 billing row + 죽은 customer 부활 방지.
+// ⚠️ org 삭제 전 Stripe 구독을 반드시 취소할 것 (delete-hook TODO): 안 그러면
+// 삭제 후 도착한 webhook이 존재하지 않는 org로 upsert 시도 → FK 위반.
 export const orgBilling = pgTable('org_billing', {
-  orgId: text('org_id').primaryKey(),
+  orgId: text('org_id')
+    .primaryKey()
+    .references(() => organization.id, { onDelete: 'cascade' }),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
   plan: text('plan').notNull().default('free'),

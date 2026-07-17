@@ -16,7 +16,7 @@
     "@p0/db": "workspace:*",
     "@p0/shared": "workspace:*",
     "better-auth": "^1.6.0",
-    "drizzle-orm": "^0.44.0",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.6.0",
     "stripe": "^18.0.0",
     "zod": "^3.25.0",

@@ -1,0 +1,1 @@
+export { isTokenStale } from './service';

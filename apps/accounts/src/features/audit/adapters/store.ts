@@ -1,5 +1,5 @@
 import { schema } from '@p0/db';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, lt } from 'drizzle-orm';
 import { db } from '../../../lib/db';
 import type { AuditStore } from '../ports';
 
@@ -14,5 +14,12 @@ export const auditStore: AuditStore = {
       .where(eq(schema.auditLog.orgId, orgId))
       .orderBy(desc(schema.auditLog.at))
       .limit(limit);
+  },
+  pruneBefore: async (cutoff) => {
+    const deleted = await db
+      .delete(schema.auditLog)
+      .where(lt(schema.auditLog.at, cutoff))
+      .returning({ id: schema.auditLog.id });
+    return deleted.length;
   },
 };

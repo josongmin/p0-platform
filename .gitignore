@@ -6,3 +6,9 @@ dist/
 *.log
 .DS_Store
 drizzle/
+
+# test coverage artifacts
+coverage/
+**/coverage/
+*.lcov
+*.lcov.info*

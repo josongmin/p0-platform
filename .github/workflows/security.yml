@@ -7,6 +7,9 @@ on:
     - cron: '0 0 * * 1' # 매주 월요일 — 전체 히스토리·전체 의존성 재스캔
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: security-${{ github.ref }}
   cancel-in-progress: true
@@ -18,7 +21,7 @@ jobs:
     container:
       image: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: semgrep (레지스트리 룰 + p0 커스텀)
         run: >
           semgrep scan --error --metrics=off
@@ -33,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0 # cron 전체 히스토리 스캔용
       - name: gitleaks
@@ -47,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: osv-scanner (의존성 CVE)
         run: |
           curl -sSL -o osv-scanner \

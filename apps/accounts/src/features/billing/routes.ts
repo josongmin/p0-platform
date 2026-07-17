@@ -27,7 +27,11 @@ billingRoutes.post(
     }
     const result = await createCheckout(c.get('orgId'), parsed.data);
     if (!result.ok) {
-      return c.json({ kind: 'validation', message: 'plan not available' }, 400);
+      const message =
+        result.error === 'already-subscribed'
+          ? 'already subscribed — manage via billing portal'
+          : 'plan not available';
+      return c.json({ kind: 'validation', message }, 400);
     }
     return c.json({ url: result.url });
   },

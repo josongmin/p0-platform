@@ -3,9 +3,17 @@ export { auth } from './adapters/better-auth';
 export { authRoutes } from './routes';
 export { setClaimsBuilder } from './claims';
 export {
+  setSeatLimitResolver,
+  setOrgDeletingHandler,
+  setUserDeletingHandler,
+} from './hooks';
+export {
   authorize,
+  deleteOrgById,
   getMemberRole,
   getSession,
+  memberOrgIds,
+  soleOwnedOrgIds,
   verifyServiceKey,
   type AuthorizeResult,
 } from './service';

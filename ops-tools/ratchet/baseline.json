@@ -1,6 +1,7 @@
 {
-  "coveragePct": 86.6,
+  "coveragePct": 90.44,
   "anyCount": 0,
-  "knipIssues": 19,
-  "prodDeps": 8
+  "knipIssues": 15,
+  "suppressionCount": 0,
+  "prodDeps": 9
 }

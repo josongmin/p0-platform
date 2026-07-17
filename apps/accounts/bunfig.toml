@@ -1,0 +1,9 @@
+[test]
+# CI에서 DB 미기동 시 보안 통합테스트가 조용히 skip되지 않도록 run-level 사전점검.
+preload = ["./test-preload.ts"]
+# 테스트 파일 자체를 커버리지에서 제외 — 테스트 파일은 항상 100% 실행되므로
+# 포함하면 커버리지가 부풀려져 라쳇이 후하게 잡힌다.
+coverageSkipTestFiles = true
+# 커버리지 대상에서 제외 — 스크립트(cron 엔트리)는 단위테스트 대상이 아님,
+# packages/db/src/schema/auth.ts 는 생성물(auth:generate).
+coveragePathIgnorePatterns = ["src/scripts/", "**/schema/auth.ts"]

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { usageEvent } from '@p0/contracts';
 import { requireServiceKey, type ServiceEnv } from '../../lib/guard';
+import { keyAllowsOrg } from './domain/scope';
 import { recordUsage } from './service';
 
 export const usageRoutes = new Hono<ServiceEnv>();
@@ -11,9 +12,8 @@ usageRoutes.post('/usage', requireServiceKey, async (c) => {
   if (!parsed.success) {
     return c.json({ kind: 'validation', message: parsed.error.message }, 400);
   }
-  // C1: org-스코프 키는 자기 org의 사용량만 기록할 수 있다. 전역 키(null)만 예외.
-  const keyOrg = c.get('serviceOrgId');
-  if (keyOrg !== null && keyOrg !== parsed.data.orgId) {
+  // C1: org-스코프 키는 자기 org의 사용량만 기록할 수 있다.
+  if (!keyAllowsOrg(c.get('serviceOrgId'), parsed.data.orgId)) {
     return c.json(
       { kind: 'forbidden', message: 'service key not scoped to this org' },
       403,

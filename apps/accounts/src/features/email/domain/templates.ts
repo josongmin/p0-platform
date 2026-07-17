@@ -64,3 +64,22 @@ export function invitationEmail(i: {
     text: `${i.inviter}님이 ${i.org} 조직에 초대했습니다. 수락:\n${i.url}`,
   };
 }
+
+// dunning — 결제 실패 알림. 재시도 회차를 알려 서비스 중단 전 결제수단 갱신 유도.
+export function dunningEmail(i: {
+  amountLabel: string;
+  attemptCount: number;
+  portalUrl: string;
+}): EmailContent {
+  const retry = i.attemptCount > 1 ? ` (재시도 ${String(i.attemptCount)}회차)` : '';
+  return {
+    subject: 'p0 결제 실패 — 결제수단을 업데이트해주세요',
+    html: shell(
+      '결제가 실패했습니다',
+      `<p><strong style="color:#f2f2f7">${esc(i.amountLabel)}</strong> 청구가 실패했습니다${esc(retry)}. 서비스 중단을 막으려면 결제수단을 업데이트해주세요.</p>`,
+      '결제수단 업데이트',
+      i.portalUrl,
+    ),
+    text: `${i.amountLabel} 청구 실패${retry}. 결제수단 업데이트: ${i.portalUrl}`,
+  };
+}
