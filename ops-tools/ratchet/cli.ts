@@ -102,8 +102,28 @@ if (command === 'guard-baseline') {
   process.exit(0);
 }
 
+// ── quick: 파일스캔 지표만 (<1초) — pre-commit 용. coverage/knip은 CI에서 ──
+if (command === 'quick') {
+  const [anyCount, suppressionCount] = await Promise.all([
+    measureAnyCount(REPO_ROOT),
+    measureSuppressionCount(REPO_ROOT),
+  ]);
+  const b = (await Bun.file(BASELINE_PATH).json()) as Baseline;
+  const fails: string[] = [];
+  if (anyCount > b.anyCount) fails.push(`anyCount ${b.anyCount} → ${anyCount}`);
+  if (suppressionCount > b.suppressionCount) {
+    fails.push(`suppressionCount ${b.suppressionCount} → ${suppressionCount}`);
+  }
+  if (fails.length > 0) {
+    for (const f of fails) console.error(`✘ 라쳇 후퇴: ${f}`);
+    process.exit(1);
+  }
+  console.log(`✔ ratchet quick ok (any: ${anyCount}, suppression: ${suppressionCount})`);
+  process.exit(0);
+}
+
 if (command !== 'check' && command !== 'update') {
-  console.error('usage: cli.ts <check|update|guard-baseline>');
+  console.error('usage: cli.ts <check|update|quick|guard-baseline>');
   process.exit(2);
 }
 

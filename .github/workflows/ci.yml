@@ -50,6 +50,9 @@ jobs:
       - name: lint (boundaries 불변량 포함)
         run: bun run lint
 
+      - name: arch-check (테이블소유권·벤더SDK·env·배선 불변량)
+        run: bun run arch
+
       - name: db push
         run: bun run db:push
 

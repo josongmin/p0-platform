@@ -42,12 +42,20 @@
         "zod": "^3.25.0",
       },
     },
+    "ops-tools/arch-check": {
+      "name": "@p0/arch-check",
+      "version": "0.0.1",
+    },
     "ops-tools/mutation": {
       "name": "@p0/mutation",
       "version": "0.0.1",
     },
     "ops-tools/ratchet": {
       "name": "@p0/ratchet",
+      "version": "0.0.1",
+    },
+    "ops-tools/scaffold": {
+      "name": "@p0/scaffold",
       "version": "0.0.1",
     },
     "packages/contracts": {
@@ -246,6 +254,8 @@
 
     "@p0/accounts": ["@p0/accounts@workspace:apps/accounts"],
 
+    "@p0/arch-check": ["@p0/arch-check@workspace:ops-tools/arch-check"],
+
     "@p0/contracts": ["@p0/contracts@workspace:packages/contracts"],
 
     "@p0/db": ["@p0/db@workspace:packages/db"],
@@ -255,6 +265,8 @@
     "@p0/mutation": ["@p0/mutation@workspace:ops-tools/mutation"],
 
     "@p0/ratchet": ["@p0/ratchet@workspace:ops-tools/ratchet"],
+
+    "@p0/scaffold": ["@p0/scaffold@workspace:ops-tools/scaffold"],
 
     "@p0/shared": ["@p0/shared@workspace:packages/shared"],
 

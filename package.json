@@ -13,6 +13,8 @@
     "lint": "eslint .",
     "ratchet": "bun ops-tools/ratchet/cli.ts check",
     "ratchet:update": "bun ops-tools/ratchet/cli.ts update",
+    "arch": "bun ops-tools/arch-check/cli.ts",
+    "new:feature": "bun ops-tools/scaffold/cli.ts",
     "db:push": "bun run --filter @p0/db db:push",
     "auth:generate": "bun run --filter @p0/accounts auth:generate",
     "prepare": "lefthook install"

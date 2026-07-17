@@ -9,7 +9,7 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
-    "ops-tools/ratchet": {
+    "ops-tools/*": {
       "entry": ["cli.ts"],
       "project": ["**/*.ts"]
     }

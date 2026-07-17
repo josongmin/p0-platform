@@ -16,8 +16,10 @@ p0 백엔드 모노레포 (bun + turbo). 구조 규칙은 [ARCHITECTURE.md](./AR
 
 ```bash
 bun run typecheck / lint / test   # 검증 3종 (pre-push가 typecheck+unit 돌림)
+bun run arch                      # 아키텍처 불변량 기계검사 (<1초) — 수정 루프마다 돌려라
 bun run ratchet                   # 품질 라쳇 체크 (CI 게이트와 동일)
 bun run ratchet:update            # 지표 개선 시 베이스라인 조이기 (커밋 필요)
+bun run new:feature <app> <name>  # hex 골격 feature 스캐폴드 — 새 feature는 반드시 이걸로 시작
 bun run db:push                   # drizzle 스키마 → DB
 bun run auth:generate             # better-auth 플러그인 변경 시 스키마 재생성
 ```
@@ -35,7 +37,8 @@ bun run auth:generate             # better-auth 플러그인 변경 시 스키�
 
 - TDD: 인터페이스 → 테스트(RED) → 구현(GREEN). domain 로직은 목 없이 단위테스트
 - 새 prod 의존성 추가는 라쳇이 경고 — PR 설명에 사유 한 줄
-- 커밋 전 훅은 staged eslint + gitleaks뿐 (<5초) — 느려졌으면 뭔가 잘못 만진 거다
+- 커밋 전 훅 = staged eslint + **arch-check + ratchet quick** + gitleaks (<5초) — 아키텍처 위반·any/억제 증가는 커밋 순간 즉사한다. 느려졌으면 뭔가 잘못 만진 거다
+- 새 feature는 `bun run new:feature`로 시작 (hex 골격 보장) — 기존 feature 복붙 금지
 
 ## 검증 프로토콜 — 천공카드 / 헬어딧 / 헬게이트
 
