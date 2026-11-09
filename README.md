@@ -1,6 +1,34 @@
+<p align="center"><img src="readme-banner.svg" alt="P0 Platform — Identity, organizations, entitlements, and subscription infrastructure." width="100%"></p>
+
 # P0 Platform
 
 A Bun and TypeScript backend monorepo for authentication, organizations, subscriptions, entitlements, and usage metering. It starts with shared account operations and separates product backends through explicit contracts and feature boundaries.
+
+
+## Engineering highlights
+
+| Mechanism | Engineering purpose |
+| :--- | :--- |
+| **Identity and organization policy** | Better Auth integration, organization/team membership, role definitions, and guards establish the account boundary. |
+| **Billing behind a gateway** | Checkout, customer-portal, and webhook behavior are separated from subscription/price policy through adapters. |
+| **Entitlement projection** | Plan and role information is projected into application-facing claims rather than scattered across product handlers. |
+| **Usage and audit separation** | Usage ingestion has an idempotent recording path; append-only audit records are read through their own service boundary. |
+| **Shared contracts and schemas** | Contract, database, and shared packages support the account service without merging every concern into HTTP routes. |
+
+
+## Architecture at a glance
+
+```mermaid
+flowchart TB
+    C["Clients and product APIs"] --> A["Hono accounts service"]
+    A --> I["Identity / organizations / roles"]
+    A --> B["Billing / entitlements"]
+    A --> U["Usage / audit / email"]
+    I --> D["Drizzle schemas and data adapters"]
+    B --> D
+    B --> S["Stripe gateway"]
+    U --> E["Storage and email adapters"]
+```
 
 ## Accounts service
 
